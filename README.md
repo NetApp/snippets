@@ -13,7 +13,7 @@ This repository contains small code snippets that illustrate integration of NetA
 
 These snippets are written as best effort and provide no warranties or SLAs, expressed or implied. 
 Please contact the author(s) via the OpenStack Discussions board on
-the [NetApp Community Forum](http://http://community.netapp.com/t5/OpenStack-Discussions/bd-p/openstack-discussions) 
+the [NetApp Community Forum](http://community.netapp.com/t5/OpenStack-Discussions/bd-p/openstack-discussions) 
 if you have questions about these scripts before running or modifying.
 
 ## Overview
