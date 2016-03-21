@@ -1,0 +1,52 @@
+# FlexPod reference architecture pre-deployment heat template
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors:
+# Dave Cain, Original Author
+#
+
+heat_template_version: 2014-10-16
+description: Configure NetApp Copy Offload Tool on controller nodes
+
+parameters:
+  server:
+    description: ID of the controller node to apply this config to
+    type: string
+  GlanceNetappCopyOffloadMount:
+    type: string
+
+resources:
+  NetAppCopyOffloadToolConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template: |
+            #!/bin/bash
+            gpasswd -a cinder glance
+            openstack-config --set /etc/glance/glance-api.conf DEFAULT show_multiple_locations true
+            openstack-config --set /etc/glance/glance-api.conf glance_store filesystem_store_metadata_file /etc/glance/netapp.json
+            cat > /etc/glance/netapp.json << EOF
+            {
+            "id": "FlexPod1",
+            "share_location": "nfs://_COPYOFFLOADMOUNT_",
+            "mountpoint": "/var/lib/glance/images",
+            "type": "nfs"
+            }
+            EOF
+          params:
+            _COPYOFFLOADMOUNT_: {get_param: GlanceNetappCopyOffloadMount}
+
+  NetAppCopyOffloadToolDeployment:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      config: {get_resource: NetAppCopyOffloadToolConfig} 
+      server: {get_param: server}
+      actions: ['CREATE']
+
+outputs:
+  deploy_stdout:
+    description: Deployment reference, used to trigger post-deploy on changes
+    value: {get_attr: [NetAppCopyOffloadToolDeployment, deploy_stdout]}

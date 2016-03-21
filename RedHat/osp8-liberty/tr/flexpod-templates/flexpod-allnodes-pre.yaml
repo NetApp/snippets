@@ -1,0 +1,30 @@
+# FlexPod reference architecture pre-deployment heat template
+# - Runs on all nodes 
+# - This file should not be modified
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors:
+# Dave Cain, Original Author
+# 
+
+heat_template_version: 2014-10-16
+description: Extra Pre-Deployment Config for all nodes before the core Puppet configuration
+
+parameters:
+  server:
+    description: ID of the node to apply this config to
+    type: string
+
+resources:
+  NetAppMultipathExtraPathsConfig:
+    type: /home/stack/flexpod-templates/netapp-extra/netapp-multipath-extra.yaml
+    properties:
+        server: {get_param: server}
+
+outputs:
+  deploy_stdout:
+    value:
+      list_join:
+      - ''
+      - - {get_attr: [NetAppMultipathExtraPathsConfig, deploy_stdout]}

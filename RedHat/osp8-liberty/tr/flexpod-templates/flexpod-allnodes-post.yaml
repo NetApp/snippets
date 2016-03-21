@@ -1,0 +1,50 @@
+# FlexPod reference architecture post-deployment heat template
+# - Adds Pacemaker resource records for NetApp E-Series 
+#   filesystem mounts that persist across system reboots.
+# - Unlike pre-deployment templates, this template is all-encompassing.
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors:
+# Dave Cain, Original Author
+# 
+
+heat_template_version: 2014-10-16
+description: Extra Post-Deployment Config for nodes after the core Puppet configuration
+
+parameters:
+  servers:
+    description: ID of the node to apply this config to
+    type: json
+  SwiftNetappEseriesLuns:
+    type: string
+
+resources:
+  NetAppEseriesPacemakerMountsConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template: |
+            #!/bin/bash
+            # Pacemaker resource mounts to have NetApp E-Series LUNS mounted by Pacemaker
+            ESERIESLUNS=(_ESERIESLUNS_)
+            #only execute on the first node in the pacemaker cluster
+            if [ `hostname -s` == "overcloud-controller-0" ]; then
+              for i in "${!ESERIESLUNS[@]}"
+                do
+                  echo ${ESERIESLUNS[$i]}
+                  pcs resource create swift-eserieslun${ESERIESLUNS[$i]}-fs Filesystem params device="/dev/eserieslun${ESERIESLUNS[$i]}" directory="/srv/node/eserieslun${ESERIESLUNS[$i]}" fstype="xfs" "options=_netdev,nobarrier,noatime,nodiratime,inode64" force_clones="yes" --clone interleave=true
+                done
+            fi
+          params:
+            _ESERIESLUNS_: {get_param: SwiftNetappEseriesLuns}
+
+  NetAppEseriesPacemakerMountsDeployments:
+    type: OS::Heat::SoftwareDeployments
+    properties:
+      name: NetAppEseriesPacemakerMountsDeployments
+      servers: {get_param: servers}
+      config: {get_resource: NetAppEseriesPacemakerMountsConfig}
+      actions: ['CREATE'] # Only do this on CREATE

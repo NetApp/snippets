@@ -1,0 +1,40 @@
+# FlexPod reference architecture pre-deployment heat template 
+# - Runs on all controller nodes
+# - This file should not be modified
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors:
+# Dave Cain, Original Author
+# 
+
+heat_template_version: 2014-10-16
+description: Extra Pre-Deployment Config for Controller nodes before the core Puppet configuration
+
+parameters:
+  server:
+    description: ID of the node to apply this config to
+    type: string
+
+resources:
+  CinderNetappConfig:
+    type: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/cinder-netapp.yaml
+    properties:
+        server: {get_param: server}
+  GlanceNetappConfig:
+    type: /home/stack/flexpod-templates/netapp-extra/netapp-copyoffload.yaml
+    properties:
+        server: {get_param: server}
+  SwiftNetappConfig:
+    type: /home/stack/flexpod-templates/netapp-extra/netapp-eseries.yaml
+    properties:
+        server: {get_param: server}
+
+outputs:
+  deploy_stdout:
+    value:
+      list_join:
+      - ''
+      - - {get_attr: [CinderNetappConfig, deploy_stdout]}
+        - {get_attr: [GlanceNetappConfig, deploy_stdout]}
+        - {get_attr: [SwiftNetappConfig, deploy_stdout]}
