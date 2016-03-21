@@ -1,0 +1,71 @@
+# FlexPod reference architecture main heat template
+# This is meant to be passed as an environment file (via the '-e' or
+# --environment-file argument passed to the 'openstack overcloud deploy'
+# script.
+#
+# Pre-Deployment Tasks (before core Puppet configuration) 
+# - Configures a NetApp cinder backend.
+# - Configures glance and cinder overrides for the NetApp Copy Offload Tool.
+# - Corrects iSCSI initiator name configured in in /etc/iscsi directory to
+#   match what is in Cisco UCS manager.
+# - Login, partition, format with XFS, create uDEV rules, mount,
+#   and fix SElinux permissions for NetApp E-Series system.
+#
+# Post-Deployment Tasks (after core Puppet configuration)
+# - Creates Pacemaker resource records for NetApp E-Series.
+# - Enables additional paths (+2) for FAS boot LUN root volume via DM-Multipath.
+#
+# NOTE: Most customization happens in this file for a RHEL-OSP deployment, 
+#       see parameter_defaults below and override to suit you own environment.
+# 
+# Copyright 2016 NetApp, Inc.
+# 
+# Contributors:
+# Dave Cain, Original Author
+# 
+
+resource_registry:
+  OS::TripleO::NodeExtraConfig: /home/stack/flexpod-templates/flexpod-allnodes-pre.yaml
+  OS::TripleO::ControllerExtraConfigPre: /home/stack/flexpod-templates/flexpod-allcontrollers-pre.yaml
+  OS::TripleO::NodeExtraConfigPost: /home/stack/flexpod-templates/flexpod-allnodes-post.yaml
+
+parameter_defaults:
+
+#### NETAPP OVERRIDES ####
+  #### Cinder ####
+  CinderEnableNetappBackend: true
+  CinderNetappBackendName: 'tripleo_netapp'
+  CinderNetappLogin: 'admin'
+  CinderNetappPassword: 'CHANGEME'
+  CinderNetappServerHostname: '172.21.11.20'
+  CinderNetappServerPort: '443'
+  CinderNetappStorageFamily: 'ontap_cluster'
+  CinderNetappStorageProtocol: 'nfs'
+  CinderNetappTransportType: 'https'
+  CinderNetappVserver: 'osp8-svm'
+  CinderNetappNfsShares: '192.168.67.1:/cinder1,192.168.67.2:/cinder2,192.168.67.1:/cinder3,192.168.67.2:/archived_data'
+  CinderNetappNfsSharesConfig: '/etc/cinder/shares.conf'
+  CinderNetappCopyOffloadToolPath: '/usr/local/bin/na_copyoffload_64'
+  #### Glance ####
+  GlanceNetappCopyOffloadMount: '192.168.67.1:/glance'
+  #### Swift ####
+  SwiftReplicas: '2'
+  SwiftNetappEseriesHic1P1: '192.168.188.252'
+  SwiftNetappEseriesLuns: '0 1 2 3'
+
+#### GENERIC ENVIRONMENT OVERRIDES ####
+  #### Hiera Overrides ####
+  controllerExtraConfig:
+    glance::api::show_image_direct_url: true
+  #### Backend Selection ####
+  #### Carried over from storage-environment.yaml ####
+  CinderEnableIscsiBackend: false
+  CinderEnableRbdBackend: false
+  NovaEnableRbdBackend: false
+  GlanceBackend: file
+  #### Glance File Backend Pacemaker Settings (NFS) ####
+  #### Carried over from storage-environment.yaml ####
+  GlanceFilePcmkManage: true
+  GlanceFilePcmkFstype: nfs
+  GlanceFilePcmkDevice: '192.168.67.1:/glance'
+  GlanceFilePcmkOptions: 'context=system_u:object_r:glance_var_lib_t:s0'

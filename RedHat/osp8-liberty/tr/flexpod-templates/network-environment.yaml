@@ -1,0 +1,39 @@
+# FlexPod reference architecture network segmentation heat template 
+#
+# - Configures appropriate network segmentation for the resulting
+#   OpenStack deployment. 
+# - See parameter_defaults below and override to suit you environment.
+# - Don't forget to modify the compute and controller nic templates too!
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors:
+# Dave Cain, Original Author
+# 
+
+resource_registry:
+  OS::TripleO::Compute::Net::SoftwareConfig: /home/stack/flexpod-templates/nic-configs/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/flexpod-templates/nic-configs/controller.yaml
+
+parameter_defaults:
+  ControlPlaneDefaultRoute: 172.21.19.18
+  EC2MetadataIp: 172.21.19.18
+  DnsServers: ["172.21.11.254","8.8.8.8"]
+  ExternalNetCidr: 172.21.11.0/24
+  ExternalAllocationPools: [{'start':'172.21.11.176', 'end':'172.21.11.240'}]
+  ExternalNetworkVlanID: 3267
+  ExternalInterfaceDefaultRoute: 172.21.11.254
+  InternalApiNetCidr: 192.168.42.0/24
+  InternalApiAllocationPools: [{'start':'192.168.42.10', 'end': '192.168.42.100'}]
+  InternalApiNetworkVlanID: 421
+  StorageNetCidr: 192.168.67.0/24
+  StorageAllocationPools: [{'start':'192.168.67.101', 'end': '192.168.67.200'}]
+  StorageNetworkVlanID: 67
+  StorageMgmtNetCidr: 192.168.99.0/24
+  StorageMgmtAllocationPools: [{'start':'192.168.99.101', 'end': '192.168.99.200'}]
+  StorageMgmtNetworkVlanID: 99
+  TenantNetCidr: 172.21.16.0/24
+  TenantAllocationPools: [{'start':'172.21.16.101', 'end': '172.21.16.200'}]
+  TenantNetworkVlanID: 3272
+  NeutronExternalNetworkBridge: "''"
+  BondInterfaceOvsOptions: "bond_mode=active-backup"

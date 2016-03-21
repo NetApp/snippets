@@ -1,0 +1,92 @@
+# FlexPod reference architecture pre-deployment heat template
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors:
+# Dave Cain, Original Author
+#
+
+heat_template_version: 2014-10-16
+description: Configure NetApp E-Series on controller nodes using ibft0/1 interfaces for Swift
+
+parameters:
+  server:
+    description: ID of the controller node to apply this config to
+    type: string
+  SwiftNetappEseriesHic1P1:
+    type: string
+  SwiftNetappEseriesLuns:
+    type: string
+
+resources:
+  SwiftNetappEseriesConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          template: |
+            #!/bin/bash
+            # Correct leftover redhat.com initiatorname
+            # so NetApp E-Series can log in
+            printf "InitiatorName="$(< /sys/firmware/ibft/initiator/initiator-name)"\n" > /etc/iscsi/initiatorname.iscsi
+            /bin/systemctl reload iscsi.service
+            /bin/systemctl restart iscsid.service
+            ESERIESLUNS=(_ESERIESLUNS_)
+            declare -A MYMAP
+            #Log into the NetApp E-Series array
+            iscsiadm --mode discovery --type sendtargets --portal=_ESERIESHIC1P1_
+            iscsiadm --mode node --login
+            #Look for NetApp E-Series system after iscsiadm
+            # - wait 30 seconds for the scsi block table to get updated
+            sleep 30
+            LASTATTACH=$(lsscsi | awk -F "" '/INF-01-00/ {print $2}' | tail -n 1)
+            #Partition, format, add udev rules for NetApp E-Series
+            for i in "${!ESERIESLUNS[@]}"
+            do
+              WWID=$(lsscsi -si $LASTATTACH:*:*:${ESERIESLUNS[$i]} | awk -F" " '{print $7}')
+              sgdisk -Z -g /dev/disk/by-id/dm-name-$WWID
+              parted -a optimal -s -- /dev/disk/by-id/dm-name-$WWID mklabel gpt mkpart primary xfs 0% 100%
+              mkfs.xfs -f -d su=131072,sw=8 /dev/disk/by-id/dm-uuid-part1-mpath-$WWID
+              UUID=$(blkid -s UUID -o value /dev/disk/by-id/dm-uuid-part1-mpath-$WWID)
+              if [ -n "$UUID" ]; then
+                MYMAP['eserieslun'${ESERIESLUNS[$i]}]="$UUID"
+              fi
+            done
+            #Create persistent udev rules files for NetApp E-Series LUNs exposed to this host
+            #Can't do this in multipath.conf as initramfs must be regenerated
+            ESERIES_UDEV_RULE="/etc/udev/rules.d/99-netapp-eseries.rules"
+            [[ -f "$ESERIES_UDEV_RULE" ]] && rm -f "$ESERIES_UDEV_RULE"
+            for i in "${!MYMAP[@]}"
+            do
+              printf 'ACTION=="add|change" ENV{ID_FS_UUID}=="%s", SYMLINK+="%s", OWNER="root", GROUP="disk", MODE="0660"\n' "${MYMAP[$i]}" "$i" >> $ESERIES_UDEV_RULE
+            done
+            # Reload/Refresh udev mapping/rules without rebooting this host
+            # - wait 15 seconds for kernel to re-read partition table
+            #   else system will complain that the devices don't exist
+            udevadm control --reload-rules
+            udevadm trigger --type=devices --action=change
+            sleep 15
+            # Now mount ready NetApp E-Series LUNs
+            for i in "${!MYMAP[@]}"
+            do
+              mkdir -p /srv/node/$i
+              mount -t xfs /dev/$i /srv/node/$i -o _netdev,nobarrier,noatime,nodiratime,inode64
+              chown -R swift:swift /srv/node/$i  
+              restorecon -Rv /srv/node/$i  
+            done
+          params:
+            _ESERIESHIC1P1_: {get_param: SwiftNetappEseriesHic1P1}
+            _ESERIESLUNS_: {get_param: SwiftNetappEseriesLuns}
+
+  SwiftNetappEseriesDeployment:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      config: {get_resource: SwiftNetappEseriesConfig} 
+      server: {get_param: server}
+      actions: ['CREATE']
+
+outputs:
+  deploy_stdout:
+    description: Deployment reference, used to trigger post-deploy on changes
+    value: {get_attr: [SwiftNetappEseriesDeployment, deploy_stdout]}

@@ -1,0 +1,42 @@
+# FlexPod reference architecture pre-deployment heat template
+#
+# Copyright 2016 NetApp, Inc.
+#  
+# Contributors: 
+# Dave Cain, Original Author
+#
+
+heat_template_version: 2014-10-16
+description: Execute login of additional paths via iBFT for NetApp FAS Boot LUNs using DM-Multipath 
+
+parameters:
+  server:
+    description: ID of the node to apply this config to
+    type: string
+
+resources:
+  NetAppMultipathExtraPathsConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: |
+        #!/bin/bash
+        # Correct leftover redhat.com initiatorname from build time
+        printf "InitiatorName="$(< /sys/firmware/ibft/initiator/initiator-name)"\n" > /etc/iscsi/initiatorname.iscsi
+        /bin/systemctl reload iscsi.service
+        /bin/systemctl restart iscsid.service
+        # Add additional paths (should be 4 total)
+        iscsiadm --mode discovery --type sendtargets --portal "$(< /sys/firmware/ibft/target0/ip-addr)"
+        iscsiadm --mode node --login
+
+  NetAppMultipathExtraPathsDeployment:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      config: {get_resource: NetAppMultipathExtraPathsConfig} 
+      server: {get_param: server}
+      actions: ['CREATE']
+
+outputs:
+  deploy_stdout:
+    description: Deployment reference, used to trigger post-deploy on changes
+    value: {get_attr: [NetAppMultipathExtraPathsDeployment, deploy_stdout]}
