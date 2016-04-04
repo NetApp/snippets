@@ -2,6 +2,8 @@
 # - See resource section below and override to suit you environment.
 # - This configuration dictates how the system will be setup from a 
 #   network interface perspective, bonding, vlans, etc.
+# - Primarily based off of the following template:
+#   openstacktack-tripleo-heat-templates/network/config/bond-with-vlans/controller.yaml
 #
 # Copyright 2016 NetApp, Inc.
 #  
@@ -13,7 +15,7 @@ heat_template_version: 2015-04-30
 
 description: >
   Software Config to drive os-net-config with 2 bonded nics on a bridge
-  with a VLANs attached for the controller role.
+  with a VLANs attached for the controller role for FlexPod TR.
 
 parameters:
   ControlPlaneIp:
@@ -40,6 +42,10 @@ parameters:
     default: ''
     description: IP address/subnet on the tenant network
     type: string
+  ManagementIpSubnet: # Only populated when including environments/network-management.yaml
+    default: ''
+    description: IP address/subnet on the management network
+    type: string
   BondInterfaceOvsOptions:
     default: ''
     description: The ovs_options string for the bond interface. Set things like
@@ -64,6 +70,10 @@ parameters:
   TenantNetworkVlanID:
     default: 50
     description: Vlan ID for the tenant network traffic.
+    type: number
+  ManagementNetworkVlanID:
+    default: 60
+    description: Vlan ID for the management network traffic.
     type: number
   ExternalInterfaceDefaultRoute:
     default: '10.0.0.1'
@@ -165,6 +175,14 @@ resources:
                   addresses:
                   -
                     ip_netmask: {get_param: TenantIpSubnet}
+                # Uncomment when including environments/network-management.yaml
+                #-
+                #  type: vlan
+                #  device: bond1
+                #  vlan_id: {get_param: ManagementNetworkVlanID}
+                #  addresses:
+                #    -
+                #      ip_netmask: {get_param: ManagementIpSubnet}
 
 outputs:
   OS::stack_id:

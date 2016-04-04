@@ -24,7 +24,6 @@
 # apply generic but needed settings to all servers in the overcloud
 # - subscription-manager registration (optional)
 # - install Manila packages
-# - rhel-osp8 engineering repositories
 for iterator in $(openstack server list | awk '/ACTIVE/ {print $8}' | cut -f2 -d'=')
 do
   scp -o StrictHostKeyChecking=no flexpodupdate-allsystems.sh heat-admin@${iterator}:/tmp/
