@@ -50,10 +50,11 @@ parameter_defaults:
   GlanceNetappCopyOffloadMount: '192.168.67.1:/glance'
   #### Swift ####
   SwiftReplicas: '2'
-  SwiftNetappEseriesHic1P1: '192.168.188.252'
+  SwiftNetappEseriesHic1P1: '192.168.188.8'
   SwiftNetappEseriesLuns: '0 1 2 3'
 
 #### GENERIC ENVIRONMENT OVERRIDES ####
+  CloudDomain: 'rtp.netapp.com'
   #### Hiera Overrides ####
   controllerExtraConfig:
     glance::api::show_image_direct_url: true

@@ -77,6 +77,19 @@
             "pm_user":"ipmiadmin",
             "pm_password":"ipmipass",
             "pm_addr":"172.21.11.64"
+        },
+	{
+	    "mac":[
+            "00:07:00:AA:00:08"
+            ],
+            "cpu":"8",
+            "memory":"16384",
+            "disk":"8",
+            "arch":"x86_64",
+            "pm_type":"pxe_ipmitool",
+            "pm_user":"ipmiadmin",
+            "pm_password":"ipmipass",
+            "pm_addr":"172.21.11.65"
         }
     ]
 }
