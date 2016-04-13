@@ -60,10 +60,11 @@ bind $MANILA_PUBLICIP:8786
 bind $MANILA_INTERNALIP:8786
 EOF
 
-# update haproxy and manila.conf oslo_messaging_rabbit stanza to account for rabbit hosts
+# update haproxy and manila.conf oslo_messaging_rabbit stanza to account for rabbit hosts and password
 # - also setup a new manila.cfg under haproxy for VIP specifics and
 #   use sysconfig directive to pass a new cfg file.
 RABBIT_HOSTS=( $(cat /etc/cinder/cinder.conf | grep rabbit_hosts | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' ) )
+RABBIT_PASSWORD=( $(grep -v '^#' /etc/cinder/cinder.conf | grep rabbit_password | awk '{print $3}' ) )
 
 for (( i=0; i< ${#RABBIT_HOSTS[@]}; i++ )) do
     echo "server overcloud-controller-$i ${RABBIT_HOSTS[$i]}:8786 check fall 5 inter 2000 rise 2" >> /etc/haproxy/manila.cfg
@@ -76,7 +77,7 @@ echo "OPTIONS=\"-f /etc/haproxy/manila.cfg\"" > /etc/sysconfig/haproxy
 openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_hosts $(echo ${RABBIT_HOSTS[@]} | tr ' ' ,)
 #openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_use_ssl False
 #openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_userid guest
-#openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_password guest
+openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_password $RABBIT_PASSWORD
 #openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_port 5672
 #openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit rabbit_virtual_host /
 #openstack-config --set /etc/manila/manila.conf oslo_messaging_rabbit amqp_durable_queues false

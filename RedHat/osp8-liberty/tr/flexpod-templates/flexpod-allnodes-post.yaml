@@ -1,7 +1,10 @@
 # FlexPod reference architecture post-deployment heat template
 # - Adds Pacemaker resource records for NetApp E-Series 
 #   filesystem mounts that persist across system reboots.
-# - Unlike pre-deployment templates, this template is all-encompassing.
+# - Disables Nova DiskFilter as it is completely broken with NFS-backed storage
+#   See https://bugzilla.redhat.com/show_bug.cgi?id=1302074 for more info.
+# - Unlike pre-deployment environment files, this environment file 
+#   is all-encompassing.
 #
 # Copyright 2016 NetApp, Inc.
 #  
@@ -41,10 +44,28 @@ resources:
           params:
             _ESERIESLUNS_: {get_param: SwiftNetappEseriesLuns}
 
+  NovaDiskFilterDisableConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config: |
+        #!/bin/bash
+        # Disable the broken DiskFilter in nova.conf
+        # See https://bugzilla.redhat.com/show_bug.cgi?id=1302074
+        openstack-config --set /etc/nova/nova.conf DEFAULT scheduler_default_filters RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter
+
   NetAppEseriesPacemakerMountsDeployments:
     type: OS::Heat::SoftwareDeployments
     properties:
       name: NetAppEseriesPacemakerMountsDeployments
       servers: {get_param: servers}
       config: {get_resource: NetAppEseriesPacemakerMountsConfig}
+      actions: ['CREATE'] # Only do this on CREATE
+
+  NovaDiskFilterDisableDeployments:
+    type: OS::Heat::SoftwareDeployments
+    properties:
+      name: NovaDiskFilterDisableDeployments
+      servers: {get_param: servers}
+      config: {get_resource: NovaDiskFilterDisableConfig}
       actions: ['CREATE'] # Only do this on CREATE
