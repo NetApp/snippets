@@ -55,6 +55,7 @@ parameter_defaults:
 
 #### GENERIC ENVIRONMENT OVERRIDES ####
   CloudDomain: 'rtp.netapp.com'
+  Debug: false
   #### Hiera Overrides ####
   controllerExtraConfig:
     glance::api::show_image_direct_url: true

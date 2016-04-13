@@ -79,3 +79,9 @@ pcs constraint order start openstack-manila-api-clone then openstack-manila-sche
 pcs constraint colocation add openstack-manila-scheduler-clone with openstack-manila-api-clone
 pcs constraint order start openstack-manila-scheduler-clone then openstack-manila-share
 pcs constraint colocation add openstack-manila-share with openstack-manila-scheduler-clone
+
+# restart nova scheduler clusterwide due to DiskFilter bug
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1302074
+if [ `hostname -s` == "overcloud-controller-0" ]; then
+    pcs resource restart openstack-nova-scheduler
+fi
