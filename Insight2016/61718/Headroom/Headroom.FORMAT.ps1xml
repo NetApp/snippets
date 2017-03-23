@@ -1,1 +1,69 @@
-<?xml version="1.0" encoding="utf-16"?><Configuration><ViewDefinitions>  <View>    <Name>Table</Name>    <ViewSelectedBy>      <TypeName>NetApp.PerfCapacity</TypeName>      <TypeName>Deserialized.NetApp.PerfCapacity</TypeName>    </ViewSelectedBy>    <TableControl>      <TableHeaders>        <TableColumnHeader>          <Width>15</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>11</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>13</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>13</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>13</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>13</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>13</Width>        </TableColumnHeader>        <TableColumnHeader>          <Width>11</Width>        </TableColumnHeader>      </TableHeaders>      <TableRowEntries>        <TableRowEntry>          <TableColumnItems>            <TableColumnItem>              <PropertyName>Name</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>Utilization</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>UtilCapRemain</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>Latency</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>LatCapRemain</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>Ops</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>OpsCapRemain</PropertyName>            </TableColumnItem>            <TableColumnItem>              <PropertyName>Confidence</PropertyName>            </TableColumnItem>          </TableColumnItems>        </TableRowEntry>      </TableRowEntries>    </TableControl>  </View></ViewDefinitions></Configuration>
+<?xml version="1.0" encoding="utf-16"?><Configuration>
+<ViewDefinitions>
+  <View>
+    <Name>Table</Name>
+    <ViewSelectedBy>
+      <TypeName>NetApp.PerfCapacity</TypeName>
+      <TypeName>Deserialized.NetApp.PerfCapacity</TypeName>
+    </ViewSelectedBy>
+    <TableControl>
+      <TableHeaders>
+        <TableColumnHeader>
+          <Width>15</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>11</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>13</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>13</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>13</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>13</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>13</Width>
+        </TableColumnHeader>
+        <TableColumnHeader>
+          <Width>11</Width>
+        </TableColumnHeader>
+      </TableHeaders>
+      <TableRowEntries>
+        <TableRowEntry>
+          <TableColumnItems>
+            <TableColumnItem>
+              <PropertyName>Name</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>Utilization</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>UtilCapRemain</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>Latency</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>LatCapRemain</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>Ops</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>OpsCapRemain</PropertyName>
+            </TableColumnItem>
+            <TableColumnItem>
+              <PropertyName>Confidence</PropertyName>
+            </TableColumnItem>
+          </TableColumnItems>
+        </TableRowEntry>
+      </TableRowEntries>
+    </TableControl>
+  </View>
+</ViewDefinitions>
+</Configuration>
